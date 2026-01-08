@@ -129,7 +129,7 @@ def main():
     if args.json:
         output_data = json.dumps(data, indent=2)
         if args.output:
-            with open(args.output, 'w') as f:
+            with open(args.output, 'w', encoding='utf-8') as f:
                 f.write(output_data)
         else:
             print(output_data)
