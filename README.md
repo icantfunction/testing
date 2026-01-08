@@ -47,6 +47,23 @@ Retrieve records starting from a specific offset:
 python3 formulary_fetch.py --size 100 --offset 200
 ```
 
+### Filtering
+
+Filter by organization name (case-insensitive partial match):
+```bash
+python3 formulary_fetch.py --size 1000 --organization "Humana" --output humana_plans.csv
+```
+
+Filter by state:
+```bash
+python3 formulary_fetch.py --size 1000 --state FL --output florida_plans.csv
+```
+
+Combine organization and state filters:
+```bash
+python3 formulary_fetch.py --size 1000 --organization "UHC" --state FL --output uhc_florida.csv
+```
+
 ### Output Options
 
 Save to a CSV file:
@@ -68,9 +85,28 @@ python3 formulary_fetch.py --size 100 --json --output formulary_data.json
 
 - `--size SIZE`: Number of records to retrieve
 - `--offset OFFSET`: Starting position for pagination
+- `--organization ORGANIZATION`: Filter by organization name (case-insensitive partial match)
+- `--state STATE`: Filter by state (e.g., FL, CA)
 - `--output OUTPUT, -o OUTPUT`: Output file path (default: stdout)
 - `--json`: Output as JSON instead of CSV
 - `--help, -h`: Show help message
+
+## Quick Start: Florida MAPD Plans
+
+To fetch formulary data for specific organizations' MAPD plans in Florida:
+
+```bash
+python3 fetch_florida_mapd.py
+```
+
+This convenience script fetches data for:
+- Devoted
+- UnitedHealthcare (UHC)
+- Humana
+- Wellcare
+- Aetna
+
+The script will automatically filter for Florida plans and save results to `florida_mapd_formulary.csv`.
 
 ## Examples
 
@@ -87,6 +123,16 @@ python3 formulary_fetch.py --size 100 --json --output formulary_data.json
 3. Preview 10 records as JSON:
    ```bash
    python3 formulary_fetch.py --size 10 --json
+   ```
+
+4. Fetch Humana plans in Florida:
+   ```bash
+   python3 formulary_fetch.py --size 5000 --organization "Humana" --state FL --output humana_fl.csv
+   ```
+
+5. Fetch all specified organizations in Florida (Devoted, UHC, Humana, Wellcare, Aetna):
+   ```bash
+   python3 fetch_florida_mapd.py
    ```
 
 ## License

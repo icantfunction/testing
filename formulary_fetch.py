@@ -19,13 +19,14 @@ API_BASE_URL = "https://data.cms.gov/data-api/v1/dataset"
 DATASET_ID = "cb2a224f-4d52-4cae-aa55-8c00c671384f"
 
 
-def fetch_formulary_data(size=None, offset=None):
+def fetch_formulary_data(size=None, offset=None, filter_params=None):
     """
     Fetch formulary data from CMS API.
     
     Args:
         size (int, optional): Number of records to retrieve
         offset (int, optional): Starting position for pagination
+        filter_params (dict, optional): Filter parameters for the API query
         
     Returns:
         list: List of records from the API
@@ -38,6 +39,8 @@ def fetch_formulary_data(size=None, offset=None):
         params['size'] = size
     if offset is not None:
         params['offset'] = offset
+    if filter_params:
+        params.update(filter_params)
     
     if params:
         url = f"{url}?{urlencode(params)}"
@@ -59,6 +62,48 @@ def fetch_formulary_data(size=None, offset=None):
     except Exception as e:
         print(f"Error fetching data: {e}", file=sys.stderr)
         sys.exit(1)
+
+
+def filter_local(data, organization=None, state=None):
+    """
+    Filter data locally by organization and/or state.
+    
+    Args:
+        data (list): List of records to filter
+        organization (str, optional): Organization name to filter (case-insensitive partial match)
+        state (str, optional): State to filter (case-insensitive)
+        
+    Returns:
+        list: Filtered list of records
+    """
+    if not data:
+        return data
+    
+    filtered = data
+    
+    if organization:
+        org_lower = organization.lower()
+        filtered = [
+            record for record in filtered
+            if any(
+                org_lower in str(value).lower()
+                for key, value in record.items()
+                if 'organization' in key.lower() or 'plan' in key.lower() or 'name' in key.lower()
+            )
+        ]
+    
+    if state:
+        state_upper = state.upper()
+        filtered = [
+            record for record in filtered
+            if any(
+                state_upper == str(value).upper()
+                for key, value in record.items()
+                if 'state' in key.lower()
+            )
+        ]
+    
+    return filtered
 
 
 def export_to_csv(data, output_file=None):
@@ -110,6 +155,14 @@ def main():
         help='Starting position for pagination'
     )
     parser.add_argument(
+        '--organization',
+        help='Filter by organization name (case-insensitive partial match)'
+    )
+    parser.add_argument(
+        '--state',
+        help='Filter by state (e.g., FL, CA)'
+    )
+    parser.add_argument(
         '--output',
         '-o',
         help='Output CSV file (default: stdout)'
@@ -124,6 +177,11 @@ def main():
     
     # Fetch data
     data = fetch_formulary_data(size=args.size, offset=args.offset)
+    
+    # Apply local filters
+    if args.organization or args.state:
+        data = filter_local(data, organization=args.organization, state=args.state)
+        print(f"Filtered to {len(data)} records", file=sys.stderr)
     
     # Output data
     if args.json:

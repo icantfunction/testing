@@ -14,7 +14,7 @@ import csv
 
 # Import the main module
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from formulary_fetch import export_to_csv
+from formulary_fetch import export_to_csv, filter_local
 
 
 def test_csv_export():
@@ -130,6 +130,62 @@ def test_url_construction():
     print("✓ URL construction test passed!")
 
 
+def test_filter_local():
+    """Test local filtering functionality."""
+    print("\nTesting local filtering...")
+    
+    mock_data = [
+        {
+            'organization_name': 'Humana Inc.',
+            'plan_name': 'Humana Gold Plus',
+            'state': 'FL',
+            'drug_name': 'Aspirin'
+        },
+        {
+            'organization_name': 'UnitedHealthcare',
+            'plan_name': 'UHC MAPD Plan',
+            'state': 'FL',
+            'drug_name': 'Ibuprofen'
+        },
+        {
+            'organization_name': 'Aetna',
+            'plan_name': 'Aetna Medicare',
+            'state': 'CA',
+            'drug_name': 'Lisinopril'
+        },
+        {
+            'organization_name': 'Wellcare',
+            'plan_name': 'Wellcare Advantage',
+            'state': 'FL',
+            'drug_name': 'Metformin'
+        }
+    ]
+    
+    # Test filter by organization
+    filtered = filter_local(mock_data, organization='Humana')
+    assert len(filtered) == 1
+    assert filtered[0]['organization_name'] == 'Humana Inc.'
+    print("  ✓ Organization filter works")
+    
+    # Test filter by state
+    filtered = filter_local(mock_data, state='FL')
+    assert len(filtered) == 3
+    print("  ✓ State filter works")
+    
+    # Test filter by both
+    filtered = filter_local(mock_data, organization='UHC', state='FL')
+    assert len(filtered) == 1
+    assert filtered[0]['organization_name'] == 'UnitedHealthcare'
+    print("  ✓ Combined filters work")
+    
+    # Test case-insensitive
+    filtered = filter_local(mock_data, organization='aetna')
+    assert len(filtered) == 1
+    print("  ✓ Case-insensitive filter works")
+    
+    print("✓ Local filtering test passed!")
+
+
 def main():
     """Run all tests."""
     print("=" * 60)
@@ -140,6 +196,7 @@ def main():
         test_csv_export()
         test_json_output()
         test_url_construction()
+        test_filter_local()
         
         print("\n" + "=" * 60)
         print("All tests passed! ✓")
