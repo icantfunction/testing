@@ -26,6 +26,8 @@ ORGANIZATIONS = [
 ]
 
 STATE = 'FL'
+BATCH_SIZE = 1000
+MAX_RECORDS_PER_ORG = 5000  # Limit to prevent excessive API calls
 
 
 def main():
@@ -42,12 +44,11 @@ def main():
         
         try:
             # Fetch data in batches
-            batch_size = 1000
             offset = 0
             org_records = []
             
             while True:
-                data = fetch_formulary_data(size=batch_size, offset=offset)
+                data = fetch_formulary_data(size=BATCH_SIZE, offset=offset)
                 
                 if not data:
                     break
@@ -56,17 +57,17 @@ def main():
                 filtered = filter_local(data, organization=org, state=STATE)
                 org_records.extend(filtered)
                 
-                print(f"  Batch {offset // batch_size + 1}: {len(filtered)} matching records", file=sys.stderr)
+                print(f"  Batch {offset // BATCH_SIZE + 1}: {len(filtered)} matching records", file=sys.stderr)
                 
                 # If we got fewer records than batch_size, we've reached the end
-                if len(data) < batch_size:
+                if len(data) < BATCH_SIZE:
                     break
                 
-                offset += batch_size
+                offset += BATCH_SIZE
                 
-                # Limit to prevent excessive API calls in this example
-                if offset >= 5000:
-                    print(f"  Reached fetch limit of 5000 records", file=sys.stderr)
+                # Limit to prevent excessive API calls
+                if offset >= MAX_RECORDS_PER_ORG:
+                    print(f"  Reached fetch limit of {MAX_RECORDS_PER_ORG} records", file=sys.stderr)
                     break
             
             print(f"  Total for {org}: {len(org_records)} records", file=sys.stderr)
@@ -81,7 +82,7 @@ def main():
     
     if all_results:
         # Export to CSV
-        output_file = f"florida_mapd_formulary.csv"
+        output_file = "florida_mapd_formulary.csv"
         export_to_csv(all_results, output_file)
         print(f"Data exported to: {output_file}", file=sys.stderr)
     else:

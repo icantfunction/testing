@@ -19,14 +19,13 @@ API_BASE_URL = "https://data.cms.gov/data-api/v1/dataset"
 DATASET_ID = "cb2a224f-4d52-4cae-aa55-8c00c671384f"
 
 
-def fetch_formulary_data(size=None, offset=None, filter_params=None):
+def fetch_formulary_data(size=None, offset=None):
     """
     Fetch formulary data from CMS API.
     
     Args:
         size (int, optional): Number of records to retrieve
         offset (int, optional): Starting position for pagination
-        filter_params (dict, optional): Filter parameters for the API query
         
     Returns:
         list: List of records from the API
@@ -39,8 +38,6 @@ def fetch_formulary_data(size=None, offset=None, filter_params=None):
         params['size'] = size
     if offset is not None:
         params['offset'] = offset
-    if filter_params:
-        params.update(filter_params)
     
     if params:
         url = f"{url}?{urlencode(params)}"
@@ -83,12 +80,13 @@ def filter_local(data, organization=None, state=None):
     
     if organization:
         org_lower = organization.lower()
+        # Check common organization/plan name fields
         filtered = [
             record for record in filtered
             if any(
                 org_lower in str(value).lower()
                 for key, value in record.items()
-                if 'organization' in key.lower() or 'plan' in key.lower() or 'name' in key.lower()
+                if key.lower() in ('organization_name', 'organization', 'plan_name', 'contract_name')
             )
         ]
     
